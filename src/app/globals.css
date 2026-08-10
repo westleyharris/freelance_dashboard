@@ -1,0 +1,132 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   Theme
+   Dark by default — this gets used at a desk and on a phone during call
+   sessions, and a dark shell keeps the stage colors readable in both.
+--------------------------------------------------------------------------- */
+
+@theme {
+  --color-canvas: #0b0f16;
+  --color-surface: #121822;
+  --color-surface-2: #1a2230;
+  --color-border: #263041;
+  --color-border-strong: #35425a;
+
+  --color-ink: #eef2f8;
+  --color-ink-muted: #93a1b8;
+  --color-ink-faint: #64748b;
+
+  --color-accent: #4f8ef7;
+  --color-accent-soft: #1c2c46;
+
+  --color-good: #34d399;
+  --color-good-soft: #10291f;
+  --color-warn: #fbbf24;
+  --color-warn-soft: #2b2110;
+  --color-bad: #f87171;
+  --color-bad-soft: #2d1618;
+  --color-info: #a78bfa;
+  --color-info-soft: #221c3a;
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+}
+
+html {
+  background: var(--color-canvas);
+  color-scheme: dark;
+  /* Stop iOS Safari from inflating text in landscape during a call session. */
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Keep the mobile bottom nav clear of the iPhone home indicator. */
+.pb-safe {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+}
+
+/* ---------------------------------------------------------------------------
+   Primitives
+--------------------------------------------------------------------------- */
+
+@utility card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+}
+
+@utility field {
+  width: 100%;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  color: var(--color-ink);
+}
+
+.field::placeholder {
+  color: var(--color-ink-faint);
+}
+
+.field:focus {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -1px;
+  border-color: transparent;
+}
+
+@utility btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease;
+  /* Comfortable tap target on a phone. */
+  min-height: 2.5rem;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@utility btn-primary {
+  background: var(--color-accent);
+  color: #06101f;
+  font-weight: 600;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #6ea1f8;
+}
+
+@utility btn-ghost {
+  background: var(--color-surface-2);
+  border-color: var(--color-border);
+  color: var(--color-ink);
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background: var(--color-border);
+}
+
+@utility label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-ink-muted);
+  margin-bottom: 0.3rem;
+}

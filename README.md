@@ -75,6 +75,24 @@ Authentication → Users**, with **Auto Confirm User** ticked.
 
 `vercel.json` registers a daily cron on `/api/cron/keepalive`.
 
+### If the deploy shows "Internal Server Error"
+
+That bare, unstyled message means middleware threw before any page could
+render — almost always a missing environment variable, since `proxy.ts` runs on
+every request and calls Supabase.
+
+The app now redirects to **`/setup`** instead, which names exactly which
+variables are missing. Two things catch people out:
+
+1. **Set them for Production, not just Development.** Vercel scopes variables
+   per environment, and missing the Production scope is the usual cause.
+2. **Redeploy after adding them.** `NEXT_PUBLIC_*` values are inlined into the
+   bundle at build time, so a running deployment can't pick them up — it needs a
+   fresh build.
+
+For any other 500, the real stack trace is in Vercel under
+**your project → Logs**, filtered to Runtime.
+
 ### About the keep-alive
 
 Supabase [pauses free-plan projects](https://supabase.com/docs/guides/platform/free-project-pausing)
@@ -137,6 +155,53 @@ Derived from the outcomes of the first 83 calls:
 buy websites, not a validated model — the fact that won prospects average 77 and
 lost average 24 is partly circular. Use it to order the queue, and re-tune once
 there's real volume behind it.
+
+---
+
+## Keyboard
+
+| Key | Does |
+| --- | --- |
+| `Cmd/Ctrl+K` | Search every prospect by name, category, city, or partial phone number; also jumps to any screen |
+| `↑` `↓` `↵` | Move and open within the palette |
+| `1`–`9` | Pick a call outcome in calling mode |
+| `Esc` | Close the palette |
+
+The palette loads the prospect list once and filters in the browser, so typing
+stays instant. Number keys are ignored while a text field has focus, so notes
+can contain digits.
+
+---
+
+## Lead generation
+
+```bash
+node scripts/fetch-leads.mjs --dry-run     # query plan, spends nothing
+node scripts/fetch-leads.mjs               # fetch + filter -> leads.csv
+node scripts/backfill-hours.mjs --dry-run  # see what needs hours
+node scripts/backfill-hours.mjs            # add opening hours
+```
+
+`fetch-leads.mjs` queries Google Places across your service area and keeps only
+businesses that pass every gate: operating, real phone (no toll-free), 5+
+reviews, **no real website**, right business type, in your service area, and not
+already in your pipeline. Output goes to `leads.csv` for review, then into
+`/prospects/import`.
+
+The gates matter more than the volume. Two filtering bugs worth remembering:
+
+- It filters on Google's returned `primaryTypeDisplayName`, not the search term.
+  Searching "catering" returns BBQ joints; "quinceanera dresses" returned 37
+  clothing stores.
+- `city` comes from the street address, not the city searched. Google's text
+  search happily returns businesses hours away — an early run surfaced leads in
+  Longview and New Braunfels.
+
+`backfill-hours.mjs` adds opening hours to prospects that lack them, one
+targeted lookup each rather than re-running the whole sweep. It only touches
+rows where `opening_hours` is null, so it's safe to re-run after an interruption,
+and it confirms each match by phone number before writing — a name-only match
+can easily be a different business.
 
 ---
 

@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { ActivityChart } from "@/components/activity-chart";
+import { OpenStatus } from "@/components/open-status";
 import { Badge, EmptyState, PageHeader, Section, Stat } from "@/components/ui";
 import { money, relativeDay, stageTone, telHref } from "@/lib/format";
 import {
@@ -18,6 +20,7 @@ export default async function TodayPage() {
   const supabase = await createClient();
   const today = new Date().toISOString().slice(0, 10);
   const weekAgo = new Date(Date.now() - 7 * DAY).toISOString();
+  const fortnightAgo = new Date(Date.now() - 14 * DAY).toISOString();
 
   const [dueResult, callsResult, pipelineResult, invoicesResult, neverResult] =
     await Promise.all([
@@ -30,7 +33,8 @@ export default async function TodayPage() {
         .lte("next_action_at", today)
         .order("next_action_at", { ascending: true }),
 
-      supabase.from("calls").select("*").gte("called_at", weekAgo),
+      // Two weeks, so the activity chart and the 7-day stats share one query.
+      supabase.from("calls").select("*").gte("called_at", fortnightAgo),
 
       supabase.from("prospects").select("stage, quoted_amount"),
 
@@ -43,7 +47,9 @@ export default async function TodayPage() {
     ]);
 
   const due = (dueResult.data ?? []) as Prospect[];
-  const calls = (callsResult.data ?? []) as Call[];
+  const allCalls = (callsResult.data ?? []) as Call[];
+  // Headline stats stay on the 7-day window; the chart uses the full fortnight.
+  const calls = allCalls.filter((c) => c.called_at >= weekAgo);
   const pipeline = (pipelineResult.data ?? []) as Pick<
     Prospect,
     "stage" | "quoted_amount"
@@ -136,6 +142,8 @@ export default async function TodayPage() {
         />
       </div>
 
+      <ActivityChart calls={allCalls} />
+
       <Section
         title={`Call list — ${due.length} due`}
         action={
@@ -192,11 +200,14 @@ export default async function TodayPage() {
                     </div>
                   </div>
 
-                  {tel && (
-                    <a href={tel} className="btn btn-primary shrink-0">
-                      Call
-                    </a>
-                  )}
+                  <div className="flex shrink-0 items-center gap-2">
+                    <OpenStatus hours={prospect.opening_hours} />
+                    {tel && (
+                      <a href={tel} className="btn btn-primary">
+                        Call
+                      </a>
+                    )}
+                  </div>
                 </li>
               );
             })}

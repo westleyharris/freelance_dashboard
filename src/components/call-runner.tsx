@@ -4,9 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { LogCallForm } from "./log-call-form";
 import { IcpBadge } from "./icp-score";
+import { OpenStatus } from "./open-status";
 import { Badge } from "./ui";
 import { relativeDay, stageTone, telHref } from "@/lib/format";
 import {
+  CONNECTED_OUTCOMES,
   STAGE_LABELS,
   WEBSITE_STATUS_LABELS,
   type Prospect,
@@ -28,6 +30,7 @@ import {
 export function CallRunner({ queue }: { queue: Prospect[] }) {
   const [index, setIndex] = useState(0);
   const [done, setDone] = useState<string[]>([]);
+  const [conversations, setConversations] = useState(0);
 
   const prospect = queue[index];
   const remaining = queue.length - done.length;
@@ -55,36 +58,67 @@ export function CallRunner({ queue }: { queue: Prospect[] }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between text-xs text-ink-muted">
-        <span>
-          {index + 1} of {queue.length} · {remaining} left
-        </span>
-        <div className="flex gap-3">
+      {/* Session scoreboard — a calling run is a grind, and watching the count
+          climb is most of what makes it bearable. */}
+      <div className="card flex items-center justify-between gap-3 px-4 py-3">
+        <div className="flex items-center gap-4">
+          <div>
+            <div className="text-xl font-semibold tabular-nums">
+              {done.length}
+            </div>
+            <div className="text-[0.65rem] tracking-wide text-ink-faint uppercase">
+              logged
+            </div>
+          </div>
+          <div className="h-8 w-px bg-border" />
+          <div>
+            <div className="text-xl font-semibold tabular-nums text-good">
+              {conversations}
+            </div>
+            <div className="text-[0.65rem] tracking-wide text-ink-faint uppercase">
+              reached
+            </div>
+          </div>
+          <div className="h-8 w-px bg-border" />
+          <div>
+            <div className="text-xl font-semibold tabular-nums text-ink-muted">
+              {remaining}
+            </div>
+            <div className="text-[0.65rem] tracking-wide text-ink-faint uppercase">
+              left
+            </div>
+          </div>
+        </div>
+
+        <div className="flex gap-2 text-xs">
           <button
             onClick={() => setIndex((c) => Math.max(0, c - 1))}
             disabled={index === 0}
-            className="hover:text-ink disabled:opacity-40"
+            className="btn btn-ghost px-2.5 py-1.5 disabled:opacity-40"
           >
-            &larr; Back
+            &larr;
           </button>
-          <button onClick={advance} className="hover:text-ink">
+          <button onClick={advance} className="btn btn-ghost px-2.5 py-1.5">
             Skip &rarr;
           </button>
         </div>
       </div>
 
-      <div className="h-1 overflow-hidden rounded-full bg-surface-2">
+      <div className="h-1.5 overflow-hidden rounded-full bg-surface-2">
         <div
-          className="h-full bg-accent transition-all"
+          className="h-full rounded-full bg-gradient-to-r from-accent to-info transition-all duration-500"
           style={{ width: `${(index / queue.length) * 100}%` }}
         />
       </div>
 
       {/* --- the prospect ------------------------------------------------- */}
-      <div className="card p-4">
+      <div key={prospect.id} className="card rise-in p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <h2 className="text-lg font-semibold">{prospect.business_name}</h2>
+            <div className="mt-1">
+              <OpenStatus hours={prospect.opening_hours} showToday />
+            </div>
             <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
               <IcpBadge score={prospect.icp_score} />
               <Badge tone={stageTone(prospect.stage)}>
@@ -207,12 +241,16 @@ export function CallRunner({ queue }: { queue: Prospect[] }) {
         <h3 className="mb-3 text-sm font-semibold">Log the call</h3>
         <LogCallForm
           prospectId={prospect.id}
-          onLogged={() => {
+          shortcuts
+          onLogged={(outcome) => {
             setDone((current) =>
               current.includes(prospect.id)
                 ? current
                 : [...current, prospect.id],
             );
+            if (CONNECTED_OUTCOMES.includes(outcome)) {
+              setConversations((n) => n + 1);
+            }
             advance();
           }}
         />

@@ -61,7 +61,17 @@
       "Bash(mv leads.csv leads-general.csv)",
       "Bash(node scripts/fetch-leads.mjs --cities 'Rockwall,Rowlett,Mesquite,Garland,Forney,Wylie,Royse City,Terrell,Sachse,Heath' --categories 'bounce house rental,yard card rental,event rentals,tent rental,wedding planner,quinceanera dresses,florist,DJ service,catering,party supplies,balloon garland,mobile bar service' --min-reviews 4 --max-pages 2)",
       "Bash(node scripts/fetch-leads.mjs --cities 'Rockwall,Rowlett,Mesquite,Garland,Forney,Wylie,Royse City,Terrell,Sachse,Heath,Murphy,Sunnyvale' --categories 'bounce house rental,yard card rental,event rentals,tent rental,wedding planner,florist,DJ service,event venue,photo booth rental,balloon decorations,party rental,handyman,remodeling contractor,fence company,custom cabinets' --min-reviews 4 --max-pages 2)",
-      "Bash(echo \"leads.csv\")"
+      "Bash(echo \"leads.csv\")",
+      "Bash(mkdir -p /tmp/hwwtest)",
+      "Bash(cp -r .next /tmp/hwwtest/)",
+      "Bash(env -u NEXT_PUBLIC_SUPABASE_URL -u NEXT_PUBLIC_SUPABASE_ANON_KEY -u SUPABASE_SERVICE_ROLE_KEY npx next dev -p 3222)",
+      "Bash(curl -s -o /dev/null -w \"status=%{http_code} redirect=%{redirect_url}\\\\n\" \"http://localhost:3222/\")",
+      "Bash(curl -s \"http://localhost:3222/setup\")",
+      "Bash(pkill -f \"next dev -p 3222\")",
+      "Bash(cat /tmp/hww-noenv.log 2>/dev/null | tail -25)",
+      "Bash(node scripts/backfill-hours.mjs --dry-run)",
+      "Bash(node scripts/backfill-hours.mjs)",
+      "WebFetch(domain:www.twilio.com)"
     ]
   }
 }

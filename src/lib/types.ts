@@ -87,6 +87,9 @@ export interface Prospect {
   chamber_member: boolean;
   /** Generated in Postgres — read-only here. See icp_*_points() in the schema. */
   icp_score: number;
+  place_id: string | null;
+  /** Places API regularOpeningHours. Null means never fetched. */
+  opening_hours: import("./hours").OpeningHours | null;
   notes: string | null;
   created_at: string;
   updated_at: string;

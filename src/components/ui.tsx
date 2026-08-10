@@ -56,9 +56,15 @@ export function Stat({
   tone?: string;
 }) {
   const body = (
-    <div className="card h-full p-4 transition-colors hover:border-border-strong">
+    <div className="card group relative h-full overflow-hidden p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-border-strong">
+      {/* Accent bar that fills in on hover — signals the tile is a link. */}
+      <span className="absolute inset-x-0 top-0 h-px scale-x-0 bg-gradient-to-r from-transparent via-accent to-transparent transition-transform duration-300 group-hover:scale-x-100" />
       <div className="text-xs font-medium text-ink-muted">{label}</div>
-      <div className={`mt-1 text-2xl font-semibold ${tone ?? ""}`}>{value}</div>
+      <div
+        className={`mt-1 text-2xl font-semibold tabular-nums ${tone ?? ""}`}
+      >
+        {value}
+      </div>
       {hint && <div className="mt-1 text-xs text-ink-faint">{hint}</div>}
     </div>
   );

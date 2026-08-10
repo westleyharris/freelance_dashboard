@@ -5,6 +5,7 @@ import { LogCallForm } from "@/components/log-call-form";
 import { ProspectEditor } from "@/components/prospect-editor";
 import { ConvertButton } from "@/components/convert-button";
 import { IcpBreakdown } from "@/components/icp-score";
+import { OpenStatus } from "@/components/open-status";
 import { Badge, Field } from "@/components/ui";
 import {
   money,
@@ -74,6 +75,10 @@ export default async function ProspectDetail({
             )}
             {record.category && <Badge>{record.category}</Badge>}
             <Badge>{WEBSITE_STATUS_LABELS[record.website_status]}</Badge>
+            {record.chamber_member && <Badge>Chamber</Badge>}
+          </div>
+          <div className="mt-2">
+            <OpenStatus hours={record.opening_hours} showToday />
           </div>
         </div>
 

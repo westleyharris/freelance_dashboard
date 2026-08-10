@@ -161,6 +161,7 @@ const FIELD_MASK = [
   "places.primaryTypeDisplayName",
   "places.googleMapsUri",
   "places.shortFormattedAddress",
+  "places.regularOpeningHours",
   "nextPageToken",
 ].join(",");
 

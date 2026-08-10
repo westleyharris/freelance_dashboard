@@ -22,8 +22,17 @@ export function Sidebar() {
   return (
     <aside className="hidden w-52 shrink-0 flex-col border-r border-border bg-surface md:flex">
       <div className="px-5 py-5">
-        <div className="text-sm font-semibold tracking-tight">Harris Web Works</div>
-        <div className="text-xs text-ink-faint">Freelance Dashboard</div>
+        <div className="flex items-center gap-2">
+          <span className="flex h-6 w-6 items-center justify-center rounded-md bg-gradient-to-br from-accent to-info text-[0.7rem] font-bold text-[#06101f]">
+            H
+          </span>
+          <div>
+            <div className="text-sm font-semibold tracking-tight">
+              Harris Web Works
+            </div>
+            <div className="text-xs text-ink-faint">Freelance Dashboard</div>
+          </div>
+        </div>
       </div>
 
       <nav className="flex flex-col gap-0.5 px-2">
@@ -31,10 +40,10 @@ export function Sidebar() {
           <Link
             key={href}
             href={href}
-            className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors ${
+            className={`relative flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all duration-150 ${
               isActive(pathname, href)
                 ? "bg-accent-soft font-medium text-accent"
-                : "text-ink-muted hover:bg-surface-2 hover:text-ink"
+                : "text-ink-muted hover:translate-x-0.5 hover:bg-surface-2 hover:text-ink"
             }`}
           >
             <Icon />

@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { hasPublicEnv } from "@/lib/env";
 
 /**
  * Routes reachable without signing in.
@@ -7,9 +8,20 @@ import { NextResponse, type NextRequest } from "next/server";
  * /signup is public by necessity — you can't authenticate before an account
  * exists — but it refuses to create a second one. See app/signup/actions.ts.
  */
-const PUBLIC_PREFIXES = ["/login", "/signup", "/intake", "/api/cron"];
+const PUBLIC_PREFIXES = ["/login", "/signup", "/intake", "/api/cron", "/setup"];
 
 export async function proxy(request: NextRequest) {
+  // Middleware runs before every route, so anything thrown here becomes a bare
+  // "Internal Server Error" with no page at all. Bail out to a diagnosable
+  // screen rather than taking the whole site down over a missing variable.
+  if (!hasPublicEnv()) {
+    if (request.nextUrl.pathname === "/setup") return NextResponse.next();
+    const url = request.nextUrl.clone();
+    url.pathname = "/setup";
+    url.search = "";
+    return NextResponse.redirect(url);
+  }
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { logCall } from "@/app/actions";
 import { OUTCOME_LABELS, type CallOutcome } from "@/lib/types";
@@ -41,9 +41,13 @@ function daysFromNow(days: number): string {
 export function LogCallForm({
   prospectId,
   onLogged,
+  shortcuts = false,
 }: {
   prospectId: string;
-  onLogged?: () => void;
+  /** Receives the outcome so the caller can keep session stats. */
+  onLogged?: (outcome: CallOutcome) => void;
+  /** Enable 1-9 outcome keys. Only on in calling mode, where hands are free. */
+  shortcuts?: boolean;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -51,6 +55,43 @@ export function LogCallForm({
   const [notes, setNotes] = useState("");
   const [nextAction, setNextAction] = useState("");
   const [error, setError] = useState<string | null>(null);
+
+  // Number keys pick an outcome without reaching for the mouse. Ignored while
+  // typing in a field, so notes can contain digits.
+  useEffect(() => {
+    if (!shortcuts) return;
+
+    const onKey = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
+
+      const index = Number(event.key) - 1;
+      if (Number.isInteger(index) && index >= 0 && index < OUTCOMES.length) {
+        event.preventDefault();
+        pick(OUTCOMES[index]);
+      }
+    };
+
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shortcuts, nextAction]);
+
+  /** Select an outcome and pre-fill a follow-up date when one makes sense. */
+  function pick(option: CallOutcome) {
+    setOutcome(option);
+    if (!nextAction && SUGGESTS_FOLLOWUP.includes(option)) {
+      setNextAction(daysFromNow(option === "spoke" ? 7 : 3));
+    }
+  }
 
   function submit() {
     if (!outcome) return;
@@ -68,11 +109,12 @@ export function LogCallForm({
         return;
       }
 
+      const logged = outcome;
       setOutcome(null);
       setNotes("");
       setNextAction("");
       setError(null);
-      onLogged?.();
+      onLogged?.(logged);
       router.refresh();
     });
   }
@@ -82,25 +124,24 @@ export function LogCallForm({
       <div>
         <span className="label">What happened?</span>
         <div className="flex flex-wrap gap-1.5">
-          {OUTCOMES.map((option) => {
+          {OUTCOMES.map((option, i) => {
             const selected = outcome === option;
             return (
               <button
                 key={option}
                 type="button"
-                onClick={() => {
-                  setOutcome(option);
-                  // Pre-fill a sensible follow-up so scheduling is one tap.
-                  if (!nextAction && SUGGESTS_FOLLOWUP.includes(option)) {
-                    setNextAction(daysFromNow(option === "spoke" ? 7 : 3));
-                  }
-                }}
-                className={`rounded-lg border px-2.5 py-2 text-xs font-medium transition-colors ${
+                onClick={() => pick(option)}
+                className={`group flex items-center gap-1.5 rounded-lg border px-2.5 py-2 text-xs font-medium transition-all duration-150 active:scale-95 ${
                   selected
-                    ? `border-transparent ${outcomeTone(option)}`
-                    : "border-border bg-surface-2 text-ink-muted hover:text-ink"
+                    ? `border-transparent ${outcomeTone(option)} ring-1 ring-white/10`
+                    : "border-border bg-surface-2 text-ink-muted hover:border-border-strong hover:text-ink"
                 }`}
               >
+                {shortcuts && i < 9 && (
+                  <kbd className="rounded bg-black/25 px-1 text-[0.6rem] text-ink-faint">
+                    {i + 1}
+                  </kbd>
+                )}
                 {OUTCOME_LABELS[option]}
               </button>
             );

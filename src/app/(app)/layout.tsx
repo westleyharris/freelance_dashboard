@@ -1,3 +1,4 @@
+import { CommandPalette } from "@/components/command-palette";
 import { MobileNav, Sidebar } from "@/components/nav";
 import { PausedBanner } from "@/components/paused-banner";
 import { createClient } from "@/lib/supabase/server";
@@ -32,6 +33,7 @@ export default async function AppLayout({
         </main>
       </div>
       <MobileNav />
+      <CommandPalette />
     </div>
   );
 }

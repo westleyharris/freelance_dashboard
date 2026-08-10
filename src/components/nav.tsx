@@ -7,6 +7,7 @@ const LINKS = [
   { href: "/", label: "Today", icon: HomeIcon },
   { href: "/call", label: "Call", icon: PhoneIcon },
   { href: "/prospects", label: "Pipeline", icon: ListIcon },
+  { href: "/calendar", label: "Calendar", icon: CalendarIcon },
   { href: "/clients", label: "Clients", icon: UsersIcon },
   { href: "/projects", label: "Projects", icon: FolderIcon },
   { href: "/money", label: "Money", icon: MoneyIcon },
@@ -134,6 +135,15 @@ function FolderIcon() {
   return (
     <svg {...base} aria-hidden>
       <path d="M3 7a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />
+    </svg>
+  );
+}
+
+function CalendarIcon() {
+  return (
+    <svg {...base} aria-hidden>
+      <rect x="3" y="5" width="18" height="16" rx="2" />
+      <path d="M3 10h18M8 3v4M16 3v4" />
     </svg>
   );
 }

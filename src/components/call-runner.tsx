@@ -3,10 +3,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import { LogCallForm } from "./log-call-form";
+import { CallLink, CallMethodPicker } from "./call-button";
 import { IcpBadge } from "./icp-score";
 import { OpenStatus } from "./open-status";
 import { Badge } from "./ui";
-import { relativeDay, stageTone, telHref } from "@/lib/format";
+import { relativeDay, stageTone } from "@/lib/format";
 import {
   CONNECTED_OUTCOMES,
   STAGE_LABELS,
@@ -14,11 +15,18 @@ import {
   type Prospect,
 } from "@/lib/types";
 import {
-  CLOSING,
+  CALL_GOAL,
+  CONFIRM,
+  DISCOVERY,
+  GATEKEEPER,
   OBJECTIONS,
+  OBSERVATION,
   OPENING,
-  PITCH,
+  RELEVANCE,
+  TEXT_FOLLOW_UP,
+  THE_ASK,
   THE_LINE,
+  VOICEMAIL,
   WORDING_WARNING,
 } from "@/lib/script";
 
@@ -49,8 +57,13 @@ export function CallRunner({ queue }: { queue: Prospect[] }) {
     );
   }
 
-  const tel = telHref(prospect.phone);
   const isDone = done.includes(prospect.id);
+
+  /** Swap the placeholders for this prospect's details. */
+  const fill = (line: string) =>
+    line
+      .replace(/\{business\}/g, prospect.business_name)
+      .replace(/\{contact\}/g, prospect.contact_name ?? "the owner");
 
   function advance() {
     setIndex((current) => Math.min(current + 1, queue.length));
@@ -170,15 +183,12 @@ export function CallRunner({ queue }: { queue: Prospect[] }) {
         )}
 
         <div className="mt-4 flex gap-2">
-          {tel ? (
-            <a href={tel} className="btn btn-primary flex-1 text-base">
-              Call {prospect.phone}
-            </a>
-          ) : (
-            <span className="btn btn-ghost flex-1 text-ink-faint">
-              No phone number
-            </span>
-          )}
+          <CallLink
+            phone={prospect.phone}
+            className="btn btn-primary flex-1 text-base"
+          >
+            Call {prospect.phone}
+          </CallLink>
           <Link
             href={`/prospects/${prospect.id}`}
             className="btn btn-ghost shrink-0"
@@ -192,20 +202,35 @@ export function CallRunner({ queue }: { queue: Prospect[] }) {
       <details className="card p-4" open>
         <summary className="cursor-pointer text-sm font-semibold">
           Script
+          <span className="ml-2 font-normal text-xs text-ink-faint">
+            {CALL_GOAL}
+          </span>
         </summary>
 
         <div className="mt-3 space-y-3 text-sm">
-          <Quote label="Opening">
-            {OPENING.replace("{business}", prospect.business_name)}
-          </Quote>
-
-          {PITCH.map((line, i) => (
-            <Quote key={i} label={i === 2 ? "Then ask" : undefined}>
-              {line}
+          {OPENING.map((line, i) => (
+            <Quote key={i} label={i === 0 ? "Open" : undefined}>
+              {fill(line)}
             </Quote>
           ))}
 
-          <Quote label="Closing">{CLOSING}</Quote>
+          <Quote label="Name what you saw">{fill(OBSERVATION)}</Quote>
+
+          {DISCOVERY.map((line, i) => (
+            <Quote key={i} label={i === 0 ? "Get them talking" : undefined}>
+              {fill(line)}
+            </Quote>
+          ))}
+
+          <Quote label="Why you called">{fill(RELEVANCE)}</Quote>
+
+          {THE_ASK.map((line, i) => (
+            <Quote key={i} label={i === 0 ? "The ask" : undefined}>
+              {fill(line)}
+            </Quote>
+          ))}
+
+          <Quote label="Before you hang up">{fill(CONFIRM)}</Quote>
 
           <div className="rounded-lg border border-accent/30 bg-accent-soft p-3">
             <div className="text-xs font-medium text-accent">
@@ -217,6 +242,17 @@ export function CallRunner({ queue }: { queue: Prospect[] }) {
           <p className="rounded-lg bg-warn-soft p-2.5 text-xs text-warn">
             {WORDING_WARNING}
           </p>
+        </div>
+      </details>
+
+      <details className="card p-4">
+        <summary className="cursor-pointer text-sm font-semibold">
+          If they don&rsquo;t pick up
+        </summary>
+        <div className="mt-3 space-y-3 text-sm">
+          <Copyable label="Voicemail — 15 seconds" text={fill(VOICEMAIL)} />
+          <Copyable label="Text right after" text={fill(TEXT_FOLLOW_UP)} />
+          <Copyable label="If you get a gatekeeper" text={fill(GATEKEEPER)} />
         </div>
       </details>
 
@@ -235,6 +271,8 @@ export function CallRunner({ queue }: { queue: Prospect[] }) {
           ))}
         </div>
       </details>
+
+      <CallMethodPicker />
 
       {/* --- log ---------------------------------------------------------- */}
       <div className="card p-4">
@@ -255,6 +293,33 @@ export function CallRunner({ queue }: { queue: Prospect[] }) {
           }}
         />
       </div>
+    </div>
+  );
+}
+
+/** Script line with a copy button — voicemail and text scripts get pasted. */
+function Copyable({ label, text }: { label: string; text: string }) {
+  const [copied, setCopied] = useState(false);
+
+  return (
+    <div>
+      <div className="mb-0.5 flex items-center justify-between gap-2">
+        <span className="text-xs font-medium text-ink-muted">{label}</span>
+        <button
+          type="button"
+          onClick={async () => {
+            await navigator.clipboard.writeText(text);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1800);
+          }}
+          className="text-xs text-accent hover:underline"
+        >
+          {copied ? "Copied" : "Copy"}
+        </button>
+      </div>
+      <p className="rounded-lg border-l-2 border-border-strong bg-surface-2 p-2.5">
+        {text}
+      </p>
     </div>
   );
 }

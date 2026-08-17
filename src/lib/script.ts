@@ -1,126 +1,128 @@
 /**
  * Call script, shown on screen during calling mode.
  *
- * Rewritten from Call_Script.pdf. What changed and why:
+ * These are lines to speak from, not a monologue to recite. If it sounds like
+ * you're reading, it's worse than saying it badly in your own words.
  *
- *  - The old opener ("is this the owner or the person who handles the website
- *    for X?") is the exact cadence of a spam call, so it triggered a reflexive
- *    no. "Not interested" was the single biggest loss reason across the first
- *    83 calls (25 of them). This one names the call for what it is instead,
- *    which is unexpected enough to buy a few seconds.
- *
- *  - It leads with a specific observation about *their* business rather than
- *    an explanation of the offer. The ICP here is businesses active on social
- *    with no website, so that observation is always available before dialling.
- *
- *  - Ownership and the one-time fee moved out of the opener and into objection
- *    handling. They answer "why you over another developer", which is a
- *    question nobody has asked in the first twenty seconds.
- *
- *  - Social proof was absent entirely. Three real local clients are worth more
- *    than any feature claim, and Alsteen Handyman is a live site to point at.
- *
- *  - The ask is now a free mock-up delivered by text, not "a quick call" —
- *    a smaller yes, and it uses the channel these prospects already reply on.
+ * The guiding rule: no technique. Openers that announce themselves — "can I
+ * borrow thirty seconds", "I'll be honest, this is a cold call", "how are you
+ * today" — all read as sales moves, because they are. What actually earns the
+ * next sentence is being specific about *their* business immediately, which
+ * proves the call isn't a mass dial. That's the only credibility available in
+ * the first ten seconds, and every lead in this pipeline qualified because it
+ * has no website, so the specific detail is always in hand before dialling.
  */
 
 export const OPENING = [
-  "Hey, is this {contact}?",
-  "My name's Wes, I'm calling from Rockwall. I'll be straight with you — this is a cold call, but it's a short one. Can I borrow thirty seconds?",
-];
-
-/** Said after they agree to the thirty seconds. Name what you actually saw. */
-export const OBSERVATION =
-  "So I came across {business} — you've got a solid following on Facebook. Am I right that you don't have an actual website yet?";
-
-/** Their answer matters less than getting them talking. */
-export const DISCOVERY = [
-  "How are most people finding you right now — mostly Facebook and word of mouth?",
-  "And when somebody wants to book you or get a price, how do they usually do that?",
+  "Hi, is this {contact}?",
+  "Hey {contact} — my name's Wes, I'm a web developer here in Rockwall. I came across {business} and noticed you don't have a website up. Is that something you've thought about?",
 ];
 
 /**
- * Only after they've described their own situation. Name real local clients —
- * this is the most persuasive sentence in the call.
+ * Their first reaction, and where to go with it. Real branches, because the
+ * second sentence is where most cold calls actually fall apart.
  */
-export const RELEVANCE =
-  "That's why I called. I build websites for local businesses around here — I did Alsteen Handyman over in Forney, and The Greeting Fairy. Both were right where you are: doing fine on Facebook, but nothing to send people to when they wanted to book.";
-
-/** A small, concrete, zero-risk yes. Not "let's schedule a call". */
-export const THE_ASK = [
-  "I'm not trying to sell you anything today. What I'd like to do is put together a quick mock-up of what yours could look like — free, no obligation — and text you the link.",
-  "If you like it, we talk. If not, you've lost nothing and I won't bother you again. Fair enough?",
+export const BRANCHES: { they: string; you: string }[] = [
+  {
+    they: "Yeah, we've been meaning to",
+    you: "That's usually how it goes — it's nobody's first priority. What's held it up so far, time or cost?",
+  },
+  {
+    they: "Who is this? / What's this about?",
+    you: "Wes Harris — I build websites for small businesses around Rockwall and Forney. That's the whole reason I'm calling.",
+  },
+  {
+    they: "We use Facebook",
+    you: "A lot of folks do, and it works. Does anyone ever tell you they had trouble finding your prices or booking you?",
+  },
+  {
+    they: "We're not interested",
+    you: "Fair enough. Mind if I ask — is it that you don't want one, or just not right now?",
+  },
+  {
+    they: "We're busy / bad time",
+    you: "No problem. Is there a better time, or do you want me to just text you instead?",
+  },
 ];
 
-/** Confirm the channel before hanging up, or the mock-up goes nowhere. */
-export const CONFIRM =
-  "Perfect — is this the best number to text it to? I'll have something over to you in the next couple of days.";
+/** Ask, then stop talking. Their answer is what you sell against later. */
+export const DISCOVERY = [
+  "How do most people find you right now?",
+  "And when somebody wants a price, how do they get hold of you?",
+];
+
+/**
+ * Drop in naturally once they've described their situation. Real local names
+ * do more than any claim about your process.
+ */
+export const CREDIBILITY =
+  "I've done a handful around here — Alsteen Handyman over in Forney, The Greeting Fairy. Both were in the same spot, everything running through Facebook.";
+
+/** Small, concrete, and it costs them nothing to say yes to. */
+export const THE_ASK = [
+  "Here's what I'd do. Let me put something together so you can actually see what yours would look like — no charge, no strings.",
+  "If you like it, we talk. If not, that's the end of it. Can I text it to this number?",
+];
 
 export const THE_LINE =
-  "You already have the customers. You just don't have anywhere to send them.";
+  "You already have the customers. There's just nowhere to send them.";
 
-/** Fifteen seconds. Most people delete anything longer. */
+/** Short. Give a reason to call back, don't pitch into the machine. */
 export const VOICEMAIL =
-  "Hi, this is Wes from Rockwall — I build websites for local businesses. I saw {business} doesn't have one yet and I put together an idea for what yours could look like. No cost, no obligation. Give me a call back at [YOUR NUMBER] or just text me and I'll send it over.";
+  "Hey, this is Wes Harris — I'm a web developer here in Rockwall. I was looking at {business} and noticed you don't have a website. If that's something you've been thinking about, give me a call back at [YOUR NUMBER]. Thanks.";
 
-/** Sent right after a voicemail. Your notes show texting is what gets replies. */
+/** Send right after the voicemail — your notes show texts get the replies. */
 export const TEXT_FOLLOW_UP =
-  "Hi {contact}, this is Wes — the local web guy who just left you a voicemail. I build sites for small businesses around Rockwall/Forney (did Alsteen Handyman and The Greeting Fairy). Happy to mock something up for {business} free so you can see it. Worth a look?";
+  "Hi {contact}, Wes Harris here — just left you a voicemail. I build websites for small businesses around Rockwall and Forney (did Alsteen Handyman and The Greeting Fairy). Noticed {business} doesn't have one. Happy to put a free mockup together so you can see it — want me to?";
 
 export const GATEKEEPER =
-  "No problem — I'm not selling anything over the phone. I build websites for local businesses and I put together a free mock-up for {business}. Who's the best person to get that in front of?";
+  "No worries — I'm not selling anything over the phone. I build websites for local businesses and I wanted to show {business} what one would look like. Who handles that?";
 
 export const OBJECTIONS: { objection: string; response: string }[] = [
   {
-    objection: "How much does it cost?",
+    objection: "How much?",
     response:
-      "For a local business site like this, most of mine land around $500 to $800 depending on how many pages you need. One-time — not a monthly bill. I'll give you an exact number once I know what you want on it.",
+      "Most of the ones I do run $500 to $800 depending on how many pages. One time, not monthly. I'd give you an exact number once I know what you want on it.",
   },
   {
-    objection: "Not interested.",
+    objection: "We don't need one, Facebook works fine.",
     response:
-      "Totally fair. Can I ask one thing before I let you go — is that because a website isn't a priority right now, or because you've been burned by somebody before?",
+      "For a lot of what you do it probably does. The one that costs you is the person who hears your name from a friend, looks you up, finds nothing, and calls somebody else. You never hear about that one.",
   },
   {
-    objection: "I don't need a website, Facebook works fine.",
+    objection: "Just email me something.",
     response:
-      "Honestly, for a lot of what you do it probably does. The gap I usually see is the person who hears about you from a friend, searches your name, and finds nothing official. That's the customer you never hear about because they never called.",
+      "I can, but honestly a brochure won't tell you much. Let me build the mockup instead so you're looking at your own site. What's the best number for it?",
   },
   {
-    objection: "Just send me some information.",
+    objection: "I can build it myself.",
     response:
-      "I'll do you one better — let me build the mock-up and text you the link so you're looking at your own site instead of a brochure. What's the best number?",
+      "You could, and some of those builders are decent. It's really whether you want to spend your weekends on it. I'd handle the whole thing and you'd still own everything at the end.",
   },
   {
-    objection: "I can build one myself.",
+    objection: "We already have a guy.",
     response:
-      "You absolutely can, and some of those builders are fine. The question is whether you want to spend your weekends on it. I'll handle it end to end and you still own everything at the finish.",
+      "Good — not trying to step on that. I'm local, so if he ever gets slow to answer, I'm easy to find.",
   },
   {
-    objection: "We already have someone.",
+    objection: "Is there a monthly fee?",
     response:
-      "Good — I'm not trying to take that. I'm local here in Rockwall, so if you ever want a second opinion or they get slow to respond, I'm easy to reach.",
+      "Not to me. You'd pay for the domain and hosting directly, around twenty bucks a month, and those accounts go in your name. I charge once to build it.",
   },
   {
-    objection: "So there's no monthly fee?",
+    objection: "What if you disappear?",
     response:
-      "None to me. You'll pay for your domain and hosting directly — normally around twenty bucks a month total, and those accounts are in your name, not mine. I charge once to build it.",
+      "Everything's yours — domain, hosting, the code. Any developer can pick it up. You're not renting it from me.",
   },
   {
-    objection: "What if I stop working with you?",
+    objection: "Send me your website.",
     response:
-      "Nothing happens. The domain, the hosting, and the source code are all yours. Any other developer can pick it up. You're not renting it from me.",
-  },
-  {
-    objection: "I'm busy right now.",
-    response:
-      "No problem — I'll keep it to a text. What's the best number, and I'll send the mock-up over when it's ready?",
+      "harriswebworks.dev. Take a look at alsteenhandyman.com too — that's one of mine, and it's probably closer to what yours would be.",
   },
 ];
 
 export const WORDING_WARNING =
-  "Don't say the website has \"zero ongoing cost.\" Domain and hosting are real recurring third-party costs — roughly $20/month, paid to them, not you. Your differentiator is no recurring fee to you, plus they keep ownership. Overstating it is the fastest way to lose trust on call two.";
+  "Never say it has \"no ongoing cost.\" Domain and hosting are real recurring costs — about $20/month, paid to those providers, not to you. What's true is that there's no recurring fee to you and they own everything. Overstate it now and you lose the deal on call two.";
 
-/** Shown under the script as a reminder of what the call is actually for. */
 export const CALL_GOAL =
-  "The goal is not to sell a website. It's to get permission to text them a free mock-up.";
+  "You're not selling a website on this call. You're getting permission to text them a mockup.";

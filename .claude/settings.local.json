@@ -71,7 +71,10 @@
       "Bash(cat /tmp/hww-noenv.log 2>/dev/null | tail -25)",
       "Bash(node scripts/backfill-hours.mjs --dry-run)",
       "Bash(node scripts/backfill-hours.mjs)",
-      "WebFetch(domain:www.twilio.com)"
+      "WebFetch(domain:www.twilio.com)",
+      "Bash(curl -s -o /dev/null -w \"/ -> %{http_code} %{redirect_url}\\\\n\" http://localhost:3000/)",
+      "Bash(curl -s -o /dev/null -w \"/calendar -> %{http_code} %{redirect_url}\\\\n\" http://localhost:3000/calendar)",
+      "Bash(curl -s -o /dev/null -w \"/call?mode=new -> %{http_code} %{redirect_url}\\\\n\" \"http://localhost:3000/call?mode=new\")"
     ]
   }
 }

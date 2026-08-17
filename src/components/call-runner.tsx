@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { LogCallForm } from "./log-call-form";
 import { CallLink, CallMethodPicker } from "./call-button";
+import { QuickEdit } from "./quick-edit";
 import { IcpBadge } from "./icp-score";
 import { OpenStatus } from "./open-status";
 import { Badge } from "./ui";
@@ -15,14 +16,13 @@ import {
   type Prospect,
 } from "@/lib/types";
 import {
+  BRANCHES,
   CALL_GOAL,
-  CONFIRM,
+  CREDIBILITY,
   DISCOVERY,
   GATEKEEPER,
   OBJECTIONS,
-  OBSERVATION,
   OPENING,
-  RELEVANCE,
   TEXT_FOLLOW_UP,
   THE_ASK,
   THE_LINE,
@@ -214,23 +214,38 @@ export function CallRunner({ queue }: { queue: Prospect[] }) {
             </Quote>
           ))}
 
-          <Quote label="Name what you saw">{fill(OBSERVATION)}</Quote>
+          <div>
+            <div className="mb-1.5 text-xs font-medium text-ink-muted">
+              Then, depending on what they say
+            </div>
+            <div className="space-y-2">
+              {BRANCHES.map(({ they, you }) => (
+                <div
+                  key={they}
+                  className="rounded-lg bg-surface-2 p-2.5 text-sm"
+                >
+                  <div className="text-xs text-ink-faint">
+                    &ldquo;{they}&rdquo;
+                  </div>
+                  <p className="mt-1">{fill(you)}</p>
+                </div>
+              ))}
+            </div>
+          </div>
 
           {DISCOVERY.map((line, i) => (
-            <Quote key={i} label={i === 0 ? "Get them talking" : undefined}>
+            <Quote key={i} label={i === 0 ? "Then just listen" : undefined}>
               {fill(line)}
             </Quote>
           ))}
 
-          <Quote label="Why you called">{fill(RELEVANCE)}</Quote>
+          <Quote label="Drop in naturally">{fill(CREDIBILITY)}</Quote>
 
           {THE_ASK.map((line, i) => (
             <Quote key={i} label={i === 0 ? "The ask" : undefined}>
               {fill(line)}
             </Quote>
           ))}
-
-          <Quote label="Before you hang up">{fill(CONFIRM)}</Quote>
 
           <div className="rounded-lg border border-accent/30 bg-accent-soft p-3">
             <div className="text-xs font-medium text-accent">
@@ -271,6 +286,8 @@ export function CallRunner({ queue }: { queue: Prospect[] }) {
           ))}
         </div>
       </details>
+
+      <QuickEdit prospect={prospect} />
 
       <CallMethodPicker />
 

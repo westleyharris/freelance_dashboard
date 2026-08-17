@@ -3,8 +3,16 @@
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { logCall } from "@/app/actions";
-import { OUTCOME_LABELS, type CallOutcome } from "@/lib/types";
-import { outcomeTone } from "@/lib/format";
+import {
+  LOST_REASON_LABELS,
+  OUTCOME_LABELS,
+  STAGE_LABELS,
+  STAGE_ORDER,
+  type CallOutcome,
+  type LostReason,
+  type ProspectStage,
+} from "@/lib/types";
+import { outcomeTone, stageTone } from "@/lib/format";
 
 /**
  * Outcome buttons ordered by how often they actually happen on a cold-call
@@ -54,6 +62,8 @@ export function LogCallForm({
   const [outcome, setOutcome] = useState<CallOutcome | null>(null);
   const [notes, setNotes] = useState("");
   const [nextAction, setNextAction] = useState("");
+  const [stage, setStage] = useState<ProspectStage | "">("");
+  const [lostReason, setLostReason] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   // Number keys pick an outcome without reaching for the mouse. Ignored while
@@ -101,6 +111,8 @@ export function LogCallForm({
     data.set("outcome", outcome);
     data.set("notes", notes);
     data.set("next_action_at", nextAction);
+    if (stage) data.set("stage", stage);
+    if (stage === "lost" && lostReason) data.set("lost_reason", lostReason);
 
     startTransition(async () => {
       const result = await logCall(data);
@@ -113,6 +125,8 @@ export function LogCallForm({
       setOutcome(null);
       setNotes("");
       setNextAction("");
+      setStage("");
+      setLostReason("");
       setError(null);
       onLogged?.(logged);
       router.refresh();
@@ -164,6 +178,54 @@ export function LogCallForm({
               onChange={(e) => setNotes(e.target.value)}
             />
           </div>
+
+          <div>
+            <span className="label">
+              Move to stage{" "}
+              <span className="font-normal text-ink-faint">
+                — leave blank to let the outcome decide
+              </span>
+            </span>
+            <div className="flex flex-wrap gap-1.5">
+              {STAGE_ORDER.map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() =>
+                    setStage((current) => (current === option ? "" : option))
+                  }
+                  className={`rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors ${
+                    stage === option
+                      ? `border-transparent ${stageTone(option)}`
+                      : "border-border bg-surface-2 text-ink-muted hover:text-ink"
+                  }`}
+                >
+                  {STAGE_LABELS[option]}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {stage === "lost" && (
+            <div>
+              <label className="label" htmlFor="lost-reason">
+                Why closed?
+              </label>
+              <select
+                id="lost-reason"
+                className="field"
+                value={lostReason}
+                onChange={(e) => setLostReason(e.target.value)}
+              >
+                <option value="">—</option>
+                {(Object.keys(LOST_REASON_LABELS) as LostReason[]).map((r) => (
+                  <option key={r} value={r}>
+                    {LOST_REASON_LABELS[r]}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div>
             <label className="label" htmlFor="next-action">

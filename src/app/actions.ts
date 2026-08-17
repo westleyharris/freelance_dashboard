@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import type { CallOutcome, ProspectStage } from "@/lib/types";
+import type { CallOutcome, Prospect, ProspectStage } from "@/lib/types";
 
 /**
  * Outcomes that imply a stage without you having to think about it mid-call.
@@ -48,22 +48,39 @@ export async function logCall(formData: FormData) {
     .eq("id", prospectId)
     .single();
 
-  const suggested = OUTCOME_TO_STAGE[outcome];
   const patch: Record<string, unknown> = {
     next_action_at: nextAction || null,
   };
 
-  if (suggested) {
-    const isDemotion =
-      ADVANCED.includes(current?.stage as ProspectStage) &&
-      suggested === "attempting";
+  // An explicit stage from the form always wins — you were on the call, the
+  // outcome mapping wasn't.
+  const chosenStage = String(formData.get("stage") ?? "").trim();
 
-    if (!isDemotion) patch.stage = suggested;
+  if (chosenStage) {
+    patch.stage = chosenStage;
+    if (chosenStage !== "lost") patch.lost_reason = null;
+  } else {
+    const suggested = OUTCOME_TO_STAGE[outcome];
+    if (suggested) {
+      const isDemotion =
+        ADVANCED.includes(current?.stage as ProspectStage) &&
+        suggested === "attempting";
+
+      if (!isDemotion) patch.stage = suggested;
+    }
   }
 
-  if (outcome === "bad_number") patch.lost_reason = "bad_number";
-  if (outcome === "wrong_number") patch.lost_reason = "bad_number";
-  if (outcome === "not_interested") patch.lost_reason = "not_interested";
+  // Only infer a reason when the resulting stage is actually lost.
+  if (patch.stage === "lost" || (!patch.stage && current?.stage === "lost")) {
+    if (outcome === "bad_number" || outcome === "wrong_number") {
+      patch.lost_reason = "bad_number";
+    } else if (outcome === "not_interested") {
+      patch.lost_reason = "not_interested";
+    }
+  }
+
+  const lostReason = String(formData.get("lost_reason") ?? "").trim();
+  if (lostReason && patch.stage === "lost") patch.lost_reason = lostReason;
 
   const { error } = await supabase
     .from("prospects")
@@ -107,6 +124,36 @@ export async function updateProspect(formData: FormData) {
   if (patch.stage !== "lost") patch.lost_reason = null;
 
   const { error } = await supabase.from("prospects").update(patch).eq("id", id);
+  if (error) return { error: error.message };
+
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
+/**
+ * Patch a handful of prospect fields. Used by the in-call quick editor, where
+ * a full form round-trip would mean leaving the call screen.
+ */
+export async function updateProspectFields(
+  id: string,
+  fields: Partial<
+    Pick<
+      Prospect,
+      | "contact_name"
+      | "phone"
+      | "email"
+      | "category"
+      | "city"
+      | "website_status"
+      | "chamber_member"
+      | "quoted_amount"
+      | "notes"
+    >
+  >,
+) {
+  const supabase = await createClient();
+
+  const { error } = await supabase.from("prospects").update(fields).eq("id", id);
   if (error) return { error: error.message };
 
   revalidatePath("/", "layout");

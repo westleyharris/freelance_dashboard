@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { scoreBand, STAGE_LABELS, type ProspectStage } from "@/lib/types";
+import { STAGE_LABELS, type ProspectStage } from "@/lib/types";
 
 interface Hit {
   id: string;
@@ -11,7 +11,6 @@ interface Hit {
   category: string | null;
   city: string | null;
   stage: ProspectStage;
-  icp_score: number;
 }
 
 const PAGES = [
@@ -19,7 +18,7 @@ const PAGES = [
   { label: "Calling mode", href: "/call" },
   { label: "Never called", href: "/call?mode=new" },
   { label: "Pipeline", href: "/prospects" },
-  { label: "Pipeline by fit score", href: "/prospects?sort=score" },
+  { label: "Chamber calls", href: "/call?mode=chamber" },
   { label: "Import prospects", href: "/prospects/import" },
   { label: "Add prospect", href: "/prospects/new" },
   { label: "Clients", href: "/clients" },
@@ -170,11 +169,6 @@ export function CommandPalette() {
                     </>
                   ) : (
                     <>
-                      <span
-                        className={`rounded px-1.5 py-0.5 text-xs font-medium ${scoreBand(item.icp_score).tone}`}
-                      >
-                        {item.icp_score}
-                      </span>
                       <span className="min-w-0 flex-1 truncate font-medium text-ink">
                         {item.business_name}
                       </span>

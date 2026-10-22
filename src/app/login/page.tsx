@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import { Mark } from "@/components/mark";
 import { createClient } from "@/lib/supabase/client";
 
 function LoginForm() {
@@ -37,9 +38,16 @@ function LoginForm() {
 
   return (
     <form onSubmit={onSubmit} className="card w-full max-w-sm space-y-4 p-6">
-      <div>
-        <h1 className="text-lg font-semibold">Harris Web Works</h1>
-        <p className="text-sm text-ink-muted">Freelance Dashboard</p>
+      <div className="flex items-center gap-3">
+        <Mark />
+        <div>
+          <h1 className="font-mono text-sm leading-none tracking-[0.14em]">
+            HARRIS WEB WORKS
+          </h1>
+          <p className="mt-1 text-sm text-ink-muted">
+            The list, the script, the follow-up.
+          </p>
+        </div>
       </div>
 
       <div>

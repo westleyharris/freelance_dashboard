@@ -4,9 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { LogCallForm } from "@/components/log-call-form";
 import { ProspectEditor } from "@/components/prospect-editor";
 import { ConvertButton } from "@/components/convert-button";
-import { IcpBreakdown } from "@/components/icp-score";
 import { OpenStatus } from "@/components/open-status";
-import { Badge, Field } from "@/components/ui";
+import { Badge, ChamberBadge, Field } from "@/components/ui";
 import {
   money,
   outcomeTone,
@@ -75,7 +74,7 @@ export default async function ProspectDetail({
             )}
             {record.category && <Badge>{record.category}</Badge>}
             <Badge>{WEBSITE_STATUS_LABELS[record.website_status]}</Badge>
-            {record.chamber_member && <Badge>Chamber</Badge>}
+            {record.chamber_member && <ChamberBadge />}
           </div>
           <div className="mt-2">
             <OpenStatus hours={record.opening_hours} showToday />
@@ -166,8 +165,6 @@ export default async function ProspectDetail({
         </div>
 
         <div className="space-y-5">
-          <IcpBreakdown prospect={record} />
-
           <div className="card p-4">
             <h2 className="mb-1 text-sm font-semibold">Details</h2>
             <dl className="divide-y divide-border">

@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { DonutChart } from "@/components/donut";
 import { Badge, EmptyState, PageHeader, Stat } from "@/components/ui";
 import { invoiceStatusTone, money, shortDate } from "@/lib/format";
 import {
   INVOICE_STATUS_LABELS,
   type Client,
   type Invoice,
+  type InvoiceStatus,
   type Project,
 } from "@/lib/types";
 
@@ -90,33 +92,56 @@ export default async function MoneyPage() {
         />
       </div>
 
-      {months.length > 0 && (
-        <section className="space-y-3">
-          <h2 className="text-sm font-semibold tracking-wide text-ink-muted uppercase">
-            Collected by month
-          </h2>
-          <div className="card space-y-2 p-4">
-            {months.map(([month, value]) => (
-              <div key={month} className="flex items-center gap-3">
-                <span className="w-16 shrink-0 text-xs text-ink-muted">
-                  {new Date(`${month}-02`).toLocaleDateString("en-US", {
-                    month: "short",
-                    year: "2-digit",
-                  })}
-                </span>
-                <div className="h-5 flex-1 overflow-hidden rounded bg-surface-2">
-                  <div
-                    className="h-full rounded bg-good/70"
-                    style={{ width: `${(value / peak) * 100}%` }}
-                  />
+      {invoices.length > 0 && (
+        <div className="grid gap-3 lg:grid-cols-2">
+          <DonutChart
+            title="Invoice status"
+            centerLabel="invoices"
+            slices={(
+              Object.keys(INVOICE_STATUS_LABELS) as InvoiceStatus[]
+            ).map((status) => ({
+              label: INVOICE_STATUS_LABELS[status],
+              value: invoices.filter((invoice) => invoice.status === status)
+                .length,
+              color:
+                status === "paid"
+                  ? "#3dffb0"
+                  : status === "sent"
+                    ? "#3ee0ff"
+                    : status === "overdue"
+                      ? "#ff5d73"
+                      : status === "draft"
+                        ? "#5d6e86"
+                        : "#2c415c",
+            }))}
+          />
+          {months.length > 0 && (
+            <section className="card space-y-2 p-4">
+              <h2 className="font-mono text-[0.65rem] tracking-[0.16em] text-ink-faint uppercase">
+                Collected by month
+              </h2>
+              {months.map(([month, value]) => (
+                <div key={month} className="flex items-center gap-3">
+                  <span className="w-16 shrink-0 font-mono text-xs text-ink-muted">
+                    {new Date(`${month}-02`).toLocaleDateString("en-US", {
+                      month: "short",
+                      year: "2-digit",
+                    })}
+                  </span>
+                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-surface-2">
+                    <div
+                      className="h-full rounded-full bg-accent"
+                      style={{ width: `${(value / peak) * 100}%` }}
+                    />
+                  </div>
+                  <span className="w-20 shrink-0 text-right font-mono text-xs">
+                    {money(value)}
+                  </span>
                 </div>
-                <span className="w-20 shrink-0 text-right text-xs font-medium">
-                  {money(value)}
-                </span>
-              </div>
-            ))}
-          </div>
-        </section>
+              ))}
+            </section>
+          )}
+        </div>
       )}
 
       <section className="space-y-3">

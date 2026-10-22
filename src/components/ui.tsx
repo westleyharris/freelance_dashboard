@@ -1,6 +1,10 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+export function ChamberBadge() {
+  return <Badge tone="bg-chamber-soft text-chamber">Chamber</Badge>;
+}
+
 export function Badge({
   children,
   tone = "bg-surface-2 text-ink-muted",
@@ -29,7 +33,7 @@ export function PageHeader({
   return (
     <div className="flex flex-wrap items-start justify-between gap-3">
       <div>
-        <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
+        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
           {title}
         </h1>
         {subtitle && (
@@ -56,13 +60,15 @@ export function Stat({
   tone?: string;
 }) {
   const body = (
-    <div className="card group relative h-full overflow-hidden p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-border-strong">
-      {/* Accent bar that fills in on hover — signals the tile is a link. */}
-      <span className="absolute inset-x-0 top-0 h-px scale-x-0 bg-gradient-to-r from-transparent via-accent to-transparent transition-transform duration-300 group-hover:scale-x-100" />
-      <div className="text-xs font-medium text-ink-muted">{label}</div>
-      <div
-        className={`mt-1 text-2xl font-semibold tabular-nums ${tone ?? ""}`}
-      >
+    <div className="card group relative h-full overflow-hidden p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-accent/40">
+      <span className="pointer-events-none absolute top-2 left-2 h-2 w-2 border-t border-l border-accent/40" />
+      <span className="pointer-events-none absolute top-2 right-2 h-2 w-2 border-t border-r border-accent/40" />
+      <span className="pointer-events-none absolute bottom-2 left-2 h-2 w-2 border-b border-l border-accent/40" />
+      <span className="pointer-events-none absolute right-2 bottom-2 h-2 w-2 border-r border-b border-accent/40" />
+      <div className="font-mono text-[0.65rem] tracking-[0.14em] text-ink-faint uppercase">
+        {label}
+      </div>
+      <div className={`mt-2 font-mono text-2xl font-semibold ${tone ?? ""}`}>
         {value}
       </div>
       {hint && <div className="mt-1 text-xs text-ink-faint">{hint}</div>}

@@ -5,9 +5,8 @@ import Link from "next/link";
 import { LogCallForm } from "./log-call-form";
 import { CallLink, CallMethodPicker } from "./call-button";
 import { QuickEdit } from "./quick-edit";
-import { IcpBadge } from "./icp-score";
 import { OpenStatus } from "./open-status";
-import { Badge } from "./ui";
+import { Badge, ChamberBadge } from "./ui";
 import { relativeDay, stageTone } from "@/lib/format";
 import {
   CONNECTED_OUTCOMES,
@@ -18,6 +17,17 @@ import {
 import {
   BRANCHES,
   CALL_GOAL,
+  CHAMBER_BRANCH,
+  CHAMBER_GATEKEEPER,
+  CHAMBER_GOAL,
+  CHAMBER_GOAL_HAS_SITE,
+  CHAMBER_LINE,
+  CHAMBER_OPENING,
+  CHAMBER_OPENING_HAS_SITE,
+  CHAMBER_TEXT,
+  CHAMBER_TEXT_HAS_SITE,
+  CHAMBER_VOICEMAIL,
+  CHAMBER_VOICEMAIL_HAS_SITE,
   CREDIBILITY,
   DISCOVERY,
   GATEKEEPER,
@@ -59,11 +69,45 @@ export function CallRunner({ queue }: { queue: Prospect[] }) {
 
   const isDone = done.includes(prospect.id);
 
+  // The warm lines name the Rockwall directory specifically. Other chambers
+  // stay on the regular script so you don't claim the wrong membership.
+  const warm =
+    prospect.chamber_member && /rockwall/i.test(prospect.source ?? "");
+  const hasSite =
+    prospect.website_status === "has_website" ||
+    prospect.website_status === "sitebuilder";
+
   /** Swap the placeholders for this prospect's details. */
   const fill = (line: string) =>
     line
-      .replace(/\{business\}/g, prospect.business_name)
-      .replace(/\{contact\}/g, prospect.contact_name ?? "the owner");
+      .replaceAll("{business}", prospect.business_name)
+      .replaceAll(
+        "{contact}",
+        prospect.contact_name ?? (warm ? "there" : "the owner"),
+      );
+
+  const opening = warm
+    ? [
+        ...(prospect.contact_name
+          ? [`Hi, is this ${prospect.contact_name}?`]
+          : []),
+        ...(hasSite ? CHAMBER_OPENING_HAS_SITE : CHAMBER_OPENING),
+      ]
+    : OPENING;
+  const branches = warm ? [CHAMBER_BRANCH, ...BRANCHES] : BRANCHES;
+  const goal = warm ? (hasSite ? CHAMBER_GOAL_HAS_SITE : CHAMBER_GOAL) : CALL_GOAL;
+  const line = warm ? CHAMBER_LINE : THE_LINE;
+  const voicemail = warm
+    ? hasSite
+      ? CHAMBER_VOICEMAIL_HAS_SITE
+      : CHAMBER_VOICEMAIL
+    : VOICEMAIL;
+  const text = warm
+    ? hasSite
+      ? CHAMBER_TEXT_HAS_SITE
+      : CHAMBER_TEXT
+    : TEXT_FOLLOW_UP;
+  const gatekeeper = warm ? CHAMBER_GATEKEEPER : GATEKEEPER;
 
   function advance() {
     setIndex((current) => Math.min(current + 1, queue.length));
@@ -76,7 +120,7 @@ export function CallRunner({ queue }: { queue: Prospect[] }) {
       <div className="card flex items-center justify-between gap-3 px-4 py-3">
         <div className="flex items-center gap-4">
           <div>
-            <div className="text-xl font-semibold tabular-nums">
+            <div className="font-mono text-xl font-semibold">
               {done.length}
             </div>
             <div className="text-[0.65rem] tracking-wide text-ink-faint uppercase">
@@ -85,7 +129,7 @@ export function CallRunner({ queue }: { queue: Prospect[] }) {
           </div>
           <div className="h-8 w-px bg-border" />
           <div>
-            <div className="text-xl font-semibold tabular-nums text-good">
+            <div className="font-mono text-xl font-semibold text-good">
               {conversations}
             </div>
             <div className="text-[0.65rem] tracking-wide text-ink-faint uppercase">
@@ -94,7 +138,7 @@ export function CallRunner({ queue }: { queue: Prospect[] }) {
           </div>
           <div className="h-8 w-px bg-border" />
           <div>
-            <div className="text-xl font-semibold tabular-nums text-ink-muted">
+            <div className="font-mono text-xl font-semibold text-ink-muted">
               {remaining}
             </div>
             <div className="text-[0.65rem] tracking-wide text-ink-faint uppercase">
@@ -133,13 +177,12 @@ export function CallRunner({ queue }: { queue: Prospect[] }) {
               <OpenStatus hours={prospect.opening_hours} showToday />
             </div>
             <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-              <IcpBadge score={prospect.icp_score} />
               <Badge tone={stageTone(prospect.stage)}>
                 {STAGE_LABELS[prospect.stage]}
               </Badge>
               {prospect.category && <Badge>{prospect.category}</Badge>}
               <Badge>{WEBSITE_STATUS_LABELS[prospect.website_status]}</Badge>
-              {prospect.chamber_member && <Badge>Chamber</Badge>}
+              {prospect.chamber_member && <ChamberBadge />}
             </div>
           </div>
           {isDone && <Badge tone="bg-good-soft text-good">Logged</Badge>}
@@ -201,16 +244,21 @@ export function CallRunner({ queue }: { queue: Prospect[] }) {
       {/* --- script ------------------------------------------------------- */}
       <details className="card p-4" open>
         <summary className="cursor-pointer text-sm font-semibold">
-          Script
+          {warm ? "Warm script" : "Script"}
           <span className="ml-2 font-normal text-xs text-ink-faint">
-            {CALL_GOAL}
+            {goal}
           </span>
         </summary>
 
         <div className="mt-3 space-y-3 text-sm">
-          {OPENING.map((line, i) => (
+          {warm && (
+            <p className="rounded-lg bg-chamber-soft px-3 py-2 text-xs text-chamber">
+              Fellow Rockwall Chamber member. Open with that before you pitch.
+            </p>
+          )}
+          {opening.map((scriptLine, i) => (
             <Quote key={i} label={i === 0 ? "Open" : undefined}>
-              {fill(line)}
+              {fill(scriptLine)}
             </Quote>
           ))}
 
@@ -219,7 +267,7 @@ export function CallRunner({ queue }: { queue: Prospect[] }) {
               Then, depending on what they say
             </div>
             <div className="space-y-2">
-              {BRANCHES.map(({ they, you }) => (
+              {branches.map(({ they, you }) => (
                 <div
                   key={they}
                   className="rounded-lg bg-surface-2 p-2.5 text-sm"
@@ -251,7 +299,7 @@ export function CallRunner({ queue }: { queue: Prospect[] }) {
             <div className="text-xs font-medium text-accent">
               The line to remember
             </div>
-            <p className="mt-1 text-sm">{THE_LINE}</p>
+            <p className="mt-1 text-sm">{line}</p>
           </div>
 
           <p className="rounded-lg bg-warn-soft p-2.5 text-xs text-warn">
@@ -265,9 +313,9 @@ export function CallRunner({ queue }: { queue: Prospect[] }) {
           If they don&rsquo;t pick up
         </summary>
         <div className="mt-3 space-y-3 text-sm">
-          <Copyable label="Voicemail — 15 seconds" text={fill(VOICEMAIL)} />
-          <Copyable label="Text right after" text={fill(TEXT_FOLLOW_UP)} />
-          <Copyable label="If you get a gatekeeper" text={fill(GATEKEEPER)} />
+          <Copyable label="Voicemail — 15 seconds" text={fill(voicemail)} />
+          <Copyable label="Text right after" text={fill(text)} />
+          <Copyable label="If you get a gatekeeper" text={fill(gatekeeper)} />
         </div>
       </details>
 

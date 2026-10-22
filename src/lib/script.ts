@@ -19,6 +19,48 @@ export const OPENING = [
 ];
 
 /**
+ * Fellow chamber member, and they don't have a real site. The membership is
+ * the reason you're allowed to call; the missing website is still the pitch.
+ */
+export const CHAMBER_OPENING = [
+  "Hey {contact} — my name's Wes Harris. I just joined the Rockwall Chamber, and I was looking through the member directory. I came across {business} and noticed you don't have a website up. Is that something you've thought about?",
+];
+
+/** Fellow member who already has a site. Don't claim they don't. */
+export const CHAMBER_OPENING_HAS_SITE = [
+  "Hey {contact} — my name's Wes Harris. I just joined the Rockwall Chamber, and I saw {business} in the member directory. I build websites for local businesses. Mind if I tell you the one thing I'd change on yours?",
+];
+
+export const CHAMBER_BRANCH = {
+  they: "How do you know us?",
+  you: "I just joined the Rockwall Chamber. I was looking through the member directory and {business} came up, so I figured I'd introduce myself instead of waiting for a mixer.",
+};
+
+export const CHAMBER_LINE =
+  "We're in the same chamber. I'd rather introduce myself now than be a stranger at the next mixer.";
+
+export const CHAMBER_GOAL =
+  "You're a fellow member. Get permission to text them a mockup.";
+
+export const CHAMBER_GOAL_HAS_SITE =
+  "You're a fellow member. Get permission to send one specific idea for their site.";
+
+export const CHAMBER_VOICEMAIL =
+  "Hey, this is Wes Harris — I just joined the Rockwall Chamber. I was looking at {business} in the member directory and noticed you don't have a website. If that's something you've thought about, give me a call back at [YOUR NUMBER]. Thanks.";
+
+export const CHAMBER_VOICEMAIL_HAS_SITE =
+  "Hey, this is Wes Harris — I just joined the Rockwall Chamber. I saw {business} in the member directory. I build websites for local businesses and had one idea for yours. Give me a call back at [YOUR NUMBER]. Thanks.";
+
+export const CHAMBER_TEXT =
+  "Hi {contact}, Wes Harris here — I just joined the Rockwall Chamber and saw {business} in the directory. I build websites for small businesses around Rockwall (Alsteen Handyman, The Greeting Fairy). Noticed you don't have one. Happy to put a free mockup together — want me to?";
+
+export const CHAMBER_TEXT_HAS_SITE =
+  "Hi {contact}, Wes Harris here — I just joined the Rockwall Chamber and saw {business} in the directory. I build websites for local businesses (Alsteen Handyman, The Greeting Fairy). I had one idea for yours — mind if I send it over?";
+
+export const CHAMBER_GATEKEEPER =
+  "No worries — I'm a new Rockwall Chamber member, not a cold call out of nowhere. I build websites for local businesses and wanted to introduce myself to whoever handles that at {business}. Who should I ask for?";
+
+/**
  * Their first reaction, and where to go with it. Real branches, because the
  * second sentence is where most cold calls actually fall apart.
  */

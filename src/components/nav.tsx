@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Mark } from "./mark";
 
 const LINKS = [
   { href: "/", label: "Today", icon: HomeIcon },
@@ -23,15 +24,15 @@ export function Sidebar() {
   return (
     <aside className="hidden w-52 shrink-0 flex-col border-r border-border bg-surface md:flex">
       <div className="px-5 py-5">
-        <div className="flex items-center gap-2">
-          <span className="flex h-6 w-6 items-center justify-center rounded-md bg-gradient-to-br from-accent to-info text-[0.7rem] font-bold text-[#06101f]">
-            H
-          </span>
+        <div className="flex items-center gap-2.5">
+          <Mark className="h-8 w-8" />
           <div>
-            <div className="text-sm font-semibold tracking-tight">
-              Harris Web Works
+            <div className="font-mono text-xs leading-none tracking-[0.16em]">
+              HARRIS
             </div>
-            <div className="text-xs text-ink-faint">Freelance Dashboard</div>
+            <div className="mt-1 font-mono text-[0.6rem] tracking-[0.18em] text-accent">
+              WEB WORKS
+            </div>
           </div>
         </div>
       </div>

@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { IcpBadge } from "@/components/icp-score";
-import { Badge, EmptyState, PageHeader } from "@/components/ui";
+import { Badge, ChamberBadge, EmptyState, PageHeader } from "@/components/ui";
 import { relativeDay, stageTone, telHref } from "@/lib/format";
 import {
   LOST_REASON_LABELS,
@@ -17,7 +16,7 @@ type SearchParams = Promise<{
   stage?: string;
   q?: string;
   category?: string;
-  sort?: string;
+  chamber?: string;
 }>;
 
 export default async function ProspectsPage({
@@ -25,7 +24,7 @@ export default async function ProspectsPage({
 }: {
   searchParams: SearchParams;
 }) {
-  const { stage, q, category, sort } = await searchParams;
+  const { stage, q, category, chamber } = await searchParams;
   const supabase = await createClient();
 
   let query = supabase.from("prospects").select("*");
@@ -40,15 +39,11 @@ export default async function ProspectsPage({
 
   if (category) query = query.eq("category", category);
   if (q) query = query.ilike("business_name", `%${q}%`);
+  if (chamber === "1") query = query.eq("chamber_member", true);
 
-  const { data } =
-    sort === "score"
-      ? await query
-          .order("icp_score", { ascending: false })
-          .order("business_name")
-      : await query
-          .order("next_action_at", { ascending: true, nullsFirst: false })
-          .order("business_name");
+  const { data } = await query
+    .order("next_action_at", { ascending: true, nullsFirst: false })
+    .order("business_name");
 
   const prospects = (data ?? []) as Prospect[];
 
@@ -66,7 +61,7 @@ export default async function ProspectsPage({
   const chipClass = (active: boolean) =>
     `rounded-lg px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors ${
       active
-        ? "bg-accent text-[#06101f]"
+        ? "bg-accent text-[#041018]"
         : "bg-surface-2 text-ink-muted hover:text-ink"
     }`;
 
@@ -95,17 +90,21 @@ export default async function ProspectsPage({
           className="field"
         />
         {stage && <input type="hidden" name="stage" value={stage} />}
+        {chamber === "1" && <input type="hidden" name="chamber" value="1" />}
         <button className="btn btn-ghost">Search</button>
       </form>
 
       <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
-        <Link href="/prospects" className={chipClass(!stage)}>
+        <Link
+          href={`/prospects?${new URLSearchParams({ ...(q && { q }), ...(chamber === "1" && { chamber: "1" }) })}`}
+          className={chipClass(!stage)}
+        >
           Open ({total - (counts.lost ?? 0)})
         </Link>
         {STAGE_ORDER.map((option) => (
           <Link
             key={option}
-            href={`/prospects?stage=${option}`}
+            href={`/prospects?${new URLSearchParams({ stage: option, ...(q && { q }), ...(chamber === "1" && { chamber: "1" }) })}`}
             className={chipClass(stage === option)}
           >
             {STAGE_LABELS[option]} ({counts[option] ?? 0})
@@ -113,20 +112,20 @@ export default async function ProspectsPage({
         ))}
       </div>
 
-      <div className="flex items-center gap-2 text-xs text-ink-muted">
-        <span>Sort</span>
+      <div className="text-xs">
         <Link
-          href={`/prospects?${new URLSearchParams({ ...(stage && { stage }), ...(q && { q }) })}`}
-          className={sort === "score" ? "hover:text-ink" : "font-medium text-accent"}
+          href={
+            chamber === "1"
+              ? `/prospects?${new URLSearchParams({ ...(stage && { stage }), ...(q && { q }) })}`
+              : `/prospects?${new URLSearchParams({ ...(stage && { stage }), ...(q && { q }), chamber: "1" })}`
+          }
+          className={
+            chamber === "1"
+              ? "font-medium text-chamber"
+              : "text-ink-muted hover:text-ink"
+          }
         >
-          Follow-up date
-        </Link>
-        <span className="text-ink-faint">·</span>
-        <Link
-          href={`/prospects?${new URLSearchParams({ ...(stage && { stage }), ...(q && { q }), sort: "score" })}`}
-          className={sort === "score" ? "font-medium text-accent" : "hover:text-ink"}
-        >
-          Fit score
+          {chamber === "1" ? "Showing chamber members" : "Chamber members only"}
         </Link>
       </div>
 
@@ -156,12 +155,12 @@ export default async function ProspectsPage({
                   </Link>
 
                   <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-faint">
-                    <IcpBadge score={prospect.icp_score} />
                     <Badge tone={stageTone(prospect.stage)}>
                       {prospect.stage === "lost" && prospect.lost_reason
                         ? LOST_REASON_LABELS[prospect.lost_reason]
                         : STAGE_LABELS[prospect.stage]}
                     </Badge>
+                    {prospect.chamber_member && <ChamberBadge />}
                     {prospect.category && <span>{prospect.category}</span>}
                     {prospect.next_action_at && (
                       <span className="text-warn">

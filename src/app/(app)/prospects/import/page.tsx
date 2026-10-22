@@ -121,8 +121,8 @@ export default function ImportPage() {
             )}
           </ul>
           <div className="flex gap-2 pt-2">
-            <Link href="/prospects?sort=score" className="btn btn-primary">
-              See them by fit score
+            <Link href="/prospects" className="btn btn-primary">
+              See the pipeline
             </Link>
             <button onClick={() => setResult(null)} className="btn btn-ghost">
               Import more
@@ -217,7 +217,7 @@ export default function ImportPage() {
             {noWebsiteCount !== null && (
               <p className="mt-3 rounded-lg bg-good-soft p-2.5 text-xs text-good">
                 {noWebsiteCount} of {parsed.rows.length} have no website. Those
-                are your best prospects — they&rsquo;ll score highest.
+                are the ones worth a call.
               </p>
             )}
           </div>
@@ -276,7 +276,7 @@ export default function ImportPage() {
                 ))}
               </select>
               <p className="mt-1.5 text-xs text-ink-faint">
-                Feeds the fit score, and lets you compare sources later.
+                So you can tell later which list a lead came from.
               </p>
             </div>
 

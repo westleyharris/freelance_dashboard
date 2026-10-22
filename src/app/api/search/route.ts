@@ -23,8 +23,8 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from("prospects")
-    .select("id, business_name, phone, category, city, stage, icp_score")
-    .order("icp_score", { ascending: false });
+    .select("id, business_name, phone, category, city, stage")
+    .order("business_name");
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

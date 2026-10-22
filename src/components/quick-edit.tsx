@@ -172,9 +172,6 @@ export function QuickEdit({ prospect }: { prospect: Prospect }) {
               className="h-4 w-4 accent-[var(--color-accent)]"
             />
             <span className="text-sm">Chamber member</span>
-            <span className="ml-auto text-xs text-ink-faint">
-              raises the fit score
-            </span>
           </label>
 
           {error && <p className="text-sm text-bad">{error}</p>}

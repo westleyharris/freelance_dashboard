@@ -1,20 +1,58 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { ActivityChart } from "@/components/activity-chart";
+import { DonutChart } from "@/components/donut";
 import { OpenStatus } from "@/components/open-status";
-import { Badge, EmptyState, PageHeader, Section, Stat } from "@/components/ui";
+import { Badge, ChamberBadge, EmptyState, PageHeader, Section, Stat } from "@/components/ui";
 import { money, relativeDay, stageTone, telHref } from "@/lib/format";
 import {
   CONNECTED_OUTCOMES,
+  OUTCOME_LABELS,
   STAGE_LABELS,
+  STAGE_ORDER,
+  WEBSITE_STATUS_LABELS,
   type Call,
+  type CallOutcome,
   type Invoice,
   type Prospect,
+  type ProspectStage,
+  type WebsiteStatus,
 } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
 const DAY = 86_400_000;
+
+const STAGE_COLORS: Record<ProspectStage, string> = {
+  new: "#5d6e86",
+  attempting: "#3ee0ff",
+  contacted: "#8b7cff",
+  interested: "#ffc857",
+  quoted: "#ff9f43",
+  won: "#3dffb0",
+  lost: "#ff5d73",
+};
+
+const SITE_COLORS: Record<WebsiteStatus, string> = {
+  none: "#3ee0ff",
+  social_only: "#8b7cff",
+  sitebuilder: "#ffc857",
+  has_website: "#5d6e86",
+  unknown: "#2c415c",
+};
+
+const OUTCOME_COLORS: Record<CallOutcome, string> = {
+  spoke: "#3dffb0",
+  callback_scheduled: "#ffc857",
+  voicemail: "#3ee0ff",
+  gatekeeper: "#8b7cff",
+  no_answer: "#5d6e86",
+  texted: "#7af0ff",
+  emailed: "#7af0ff",
+  not_interested: "#ff5d73",
+  bad_number: "#ff5d73",
+  wrong_number: "#ff9f43",
+};
 
 export default async function TodayPage() {
   const supabase = await createClient();
@@ -22,7 +60,7 @@ export default async function TodayPage() {
   const weekAgo = new Date(Date.now() - 7 * DAY).toISOString();
   const fortnightAgo = new Date(Date.now() - 14 * DAY).toISOString();
 
-  const [dueResult, callsResult, pipelineResult, invoicesResult, neverResult] =
+  const [dueResult, callsResult, pipelineResult, invoicesResult, neverResult, chamberResult] =
     await Promise.all([
       // Anything scheduled for today or already overdue.
       supabase
@@ -36,7 +74,9 @@ export default async function TodayPage() {
       // Two weeks, so the activity chart and the 7-day stats share one query.
       supabase.from("calls").select("*").gte("called_at", fortnightAgo),
 
-      supabase.from("prospects").select("stage, quoted_amount"),
+      supabase
+        .from("prospects")
+        .select("stage, quoted_amount, website_status"),
 
       supabase.from("invoices").select("*"),
 
@@ -44,6 +84,14 @@ export default async function TodayPage() {
         .from("prospects")
         .select("id", { count: "exact", head: true })
         .eq("stage", "new"),
+
+      supabase
+        .from("prospects")
+        .select("id", { count: "exact", head: true })
+        .eq("stage", "new")
+        .eq("chamber_member", true)
+        .eq("source", "Rockwall Chamber")
+        .not("phone", "is", null),
     ]);
 
   const due = (dueResult.data ?? []) as Prospect[];
@@ -52,7 +100,7 @@ export default async function TodayPage() {
   const calls = allCalls.filter((c) => c.called_at >= weekAgo);
   const pipeline = (pipelineResult.data ?? []) as Pick<
     Prospect,
-    "stage" | "quoted_amount"
+    "stage" | "quoted_amount" | "website_status"
   >[];
   const invoices = (invoicesResult.data ?? []) as Invoice[];
 
@@ -87,6 +135,41 @@ export default async function TodayPage() {
   const overdue = due.filter(
     (p) => p.next_action_at && p.next_action_at < today,
   ).length;
+
+  const openPipeline = pipeline.filter(
+    (p) => !["won", "lost"].includes(p.stage),
+  );
+
+  const stageSlices = STAGE_ORDER.filter(
+    (stage) => stage !== "won" && stage !== "lost",
+  ).map((stage) => ({
+    label: STAGE_LABELS[stage],
+    value: openPipeline.filter((p) => p.stage === stage).length,
+    color: STAGE_COLORS[stage],
+  }));
+
+  const websiteSlices = (
+    Object.keys(WEBSITE_STATUS_LABELS) as WebsiteStatus[]
+  ).map((status) => ({
+    label: WEBSITE_STATUS_LABELS[status],
+    value: openPipeline.filter((p) => p.website_status === status).length,
+    color: SITE_COLORS[status],
+  }));
+
+  const outcomeCounts = calls.reduce<Partial<Record<CallOutcome, number>>>(
+    (acc, call) => {
+      acc[call.outcome] = (acc[call.outcome] ?? 0) + 1;
+      return acc;
+    },
+    {},
+  );
+  const outcomeSlices = (Object.keys(OUTCOME_LABELS) as CallOutcome[])
+    .filter((outcome) => outcomeCounts[outcome])
+    .map((outcome) => ({
+      label: OUTCOME_LABELS[outcome],
+      value: outcomeCounts[outcome] ?? 0,
+      color: OUTCOME_COLORS[outcome],
+    }));
 
   return (
     <div className="space-y-7">
@@ -142,6 +225,38 @@ export default async function TodayPage() {
         />
       </div>
 
+      {(chamberResult.count ?? 0) > 0 && (
+        <Link
+          href="/call?mode=chamber"
+          className="card group relative flex flex-wrap items-center justify-between gap-4 overflow-hidden p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-accent/40"
+        >
+          <span className="absolute inset-y-0 left-0 w-1 bg-accent" />
+          <div className="pl-2">
+            <div className="font-mono text-[0.65rem] tracking-[0.16em] text-accent uppercase">
+              Warm list
+            </div>
+            <p className="mt-1 text-xl font-semibold">
+              {chamberResult.count} chamber{" "}
+              {chamberResult.count === 1 ? "member" : "members"} with no website
+            </p>
+            <p className="mt-1 max-w-xl text-sm text-ink-muted">
+              You just joined the Rockwall Chamber. Open with that.
+            </p>
+          </div>
+          <span className="btn btn-primary">Start warm calls</span>
+        </Link>
+      )}
+
+      <div className="grid gap-3 lg:grid-cols-3">
+        <DonutChart title="Open pipeline" slices={stageSlices} />
+        <DonutChart title="Websites" slices={websiteSlices} centerLabel="open" />
+        <DonutChart
+          title="Calls this week"
+          slices={outcomeSlices}
+          centerLabel="calls"
+        />
+      </div>
+
       <ActivityChart calls={allCalls} />
 
       <Section
@@ -192,6 +307,7 @@ export default async function TodayPage() {
                       >
                         due {relativeDay(prospect.next_action_at)}
                       </span>
+                      {prospect.chamber_member && <ChamberBadge />}
                       {prospect.contact_name && (
                         <span className="truncate text-xs text-ink-faint">
                           · {prospect.contact_name}

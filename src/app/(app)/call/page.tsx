@@ -26,25 +26,43 @@ export default async function CallPage({
     .not("stage", "in", "(won,lost)")
     .not("phone", "is", null);
 
-  // Fresh prospects go best-fit-first so the strongest leads get dialled while
-  // you're sharp. Scheduled follow-ups stay in date order — those are promises.
+  // Scheduled follow-ups stay in date order — those are promises.
+  // Fresh names go alphabetical. Chamber is the warm list you haven't dialed.
   const { data } =
-    mode === "new"
+    mode === "chamber"
       ? await base
           .eq("stage", "new")
-          .order("icp_score", { ascending: false })
+          .eq("chamber_member", true)
+          .eq("source", "Rockwall Chamber")
           .order("business_name")
-      : await base
-          .not("next_action_at", "is", null)
-          .lte("next_action_at", today)
-          .order("next_action_at", { ascending: true });
+          .limit(2000)
+      : mode === "new"
+        ? await base
+            .eq("stage", "new")
+            .order("business_name")
+            .limit(2000)
+        : await base
+            .not("next_action_at", "is", null)
+            .lte("next_action_at", today)
+            .order("next_action_at", { ascending: true });
 
   let queue = (data ?? []) as Prospect[];
 
-  if (mode === "new") {
-    // Open-now wins over fit, because a great lead that's shut is a wasted
-    // dial. Within each group the score order above is preserved — Array.sort
-    // is stable, so this reorders the groups without shuffling their contents.
+  if (mode === "chamber") {
+    // No website is still the pitch. Sort this first so the open-now sort
+    // below keeps it inside each open/closed group.
+    const siteRank = (p: Prospect) =>
+      p.website_status === "none" || p.website_status === "social_only"
+        ? 0
+        : p.website_status === "sitebuilder"
+          ? 1
+          : 2;
+    queue = [...queue].sort((a, b) => siteRank(a) - siteRank(b));
+  }
+
+  if (mode === "new" || mode === "chamber") {
+    // Open-now wins, because a lead that's shut is a wasted dial. Within
+    // each group the order above is preserved — Array.sort is stable.
     //
     // Businesses with unknown hours sit between open and closed: they might
     // pick up, and 16 of the leads have no hours published at all.
@@ -64,16 +82,18 @@ export default async function CallPage({
       <PageHeader
         title="Calling mode"
         subtitle={
-          mode === "new"
-            ? `Open now first, then best fit — ${openNow} open right now`
-            : "Follow-ups due today or overdue"
+          mode === "chamber"
+            ? `${queue.length} Rockwall Chamber members. No website comes up first — the directory doesn't include hours.`
+            : mode === "new"
+              ? `Open now first, then best fit — ${openNow} open right now`
+              : "Follow-ups due today or overdue"
         }
       />
 
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <Link
           href="/call"
-          className={`btn ${mode !== "new" ? "btn-primary" : "btn-ghost"}`}
+          className={`btn ${!mode ? "btn-primary" : "btn-ghost"}`}
         >
           Due today
         </Link>
@@ -83,26 +103,46 @@ export default async function CallPage({
         >
           Never called
         </Link>
+        <Link
+          href="/call?mode=chamber"
+          className={`btn ${mode === "chamber" ? "btn-primary" : "btn-ghost"}`}
+        >
+          Chamber
+        </Link>
       </div>
 
       {queue.length === 0 ? (
         <EmptyState
           title={
-            mode === "new"
-              ? "No uncalled prospects left"
-              : "Nothing due right now"
+            mode === "chamber"
+              ? "No uncalled chamber members"
+              : mode === "new"
+                ? "No uncalled prospects left"
+                : "Nothing due right now"
           }
           hint={
-            mode === "new"
-              ? "Every prospect with a phone number has been dialed at least once. Add more prospects to keep the list full."
-              : "Follow-ups show up here on their due date. Switch to 'Never called' to work through fresh prospects instead."
+            mode === "chamber"
+              ? "Every Rockwall Chamber member with a number has been dialed at least once. Anyone you already had in the pipeline still gets the warm opener when they come up."
+              : mode === "new"
+                ? "Every prospect with a phone number has been dialed at least once. Add more prospects to keep the list full."
+                : "Follow-ups show up here on their due date. Switch to Chamber for the warm list, or Never called for everyone else."
           }
           action={
             <Link
-              href={mode === "new" ? "/prospects/new" : "/call?mode=new"}
+              href={
+                mode === "new"
+                  ? "/prospects/new"
+                  : mode === "chamber"
+                    ? "/call?mode=new"
+                    : "/call?mode=chamber"
+              }
               className="btn btn-primary"
             >
-              {mode === "new" ? "Add a prospect" : "Call someone new"}
+              {mode === "new"
+                ? "Add a prospect"
+                : mode === "chamber"
+                  ? "Call someone new"
+                  : "Start the warm list"}
             </Link>
           }
         />

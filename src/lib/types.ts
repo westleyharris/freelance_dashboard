@@ -314,16 +314,6 @@ export const CATEGORY_SUGGESTIONS = {
   ],
 } as const;
 
-export function scoreBand(score: number): {
-  label: string;
-  tone: string;
-} {
-  if (score >= 70) return { label: "Strong fit", tone: "bg-good-soft text-good" };
-  if (score >= 45) return { label: "Worth calling", tone: "bg-warn-soft text-warn" };
-  if (score >= 25) return { label: "Marginal", tone: "bg-surface-2 text-ink-muted" };
-  return { label: "Poor fit", tone: "bg-bad-soft text-bad" };
-}
-
 /** The page checklist from Client Website Intake Form.docx. */
 export const PAGE_OPTIONS = [
   "Home",

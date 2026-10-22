@@ -43,7 +43,7 @@ export function SignupForm() {
   return (
     <form onSubmit={onSubmit} className="card w-full max-w-sm space-y-4 p-6">
       <div>
-        <h1 className="text-lg font-semibold">Create your account</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Create your account</h1>
         <p className="mt-1 text-sm text-ink-muted">
           One-time setup for the Freelance Dashboard.
         </p>
